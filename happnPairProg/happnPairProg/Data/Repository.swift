@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import RxSwift
 
 class Repository {
 	func fetch(handler: (Result<[User]?, Error>) -> Void) {
@@ -21,6 +21,23 @@ class Repository {
 		}
 		handler(.success(result))
 	}
+}
+
+extension Repository {
+    func fetch() -> Observable<[User]> {
+        Observable.create { [weak self]anyObserver in
+            self?.fetch { result in
+                switch result {
+                case .success(let users):
+                    anyObserver.onNext(users ?? [])
+                    anyObserver.onCompleted()
+                case .failure(let error):
+                    anyObserver.onError(error)
+                }
+            }
+            return Disposables.create()
+        }
+    }
 }
 
 extension Repository {
